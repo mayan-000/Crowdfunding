@@ -8,7 +8,7 @@ export const registerUser = async (req: Request, res: Response) => {
     const { signedTx } = req.body;
 
     if (!signedTx) {
-      res.status(500).json({ error: "Missing signed transaction" });
+      res.status(400).json({ error: "Missing signed transaction" });
       return;
     }
 
