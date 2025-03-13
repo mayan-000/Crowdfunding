@@ -50,3 +50,15 @@ export const getUser = async (req: Request, res: Response) => {
     res.status(500).json({ error: error.message });
   }
 };
+
+export const getAllUser = async (req: Request, res: Response) => {
+  try {
+    const users = await contract.getAllUser();
+
+    res.json({
+      users,
+    });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+};

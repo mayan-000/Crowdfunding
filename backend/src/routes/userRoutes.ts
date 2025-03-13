@@ -1,11 +1,18 @@
 import dotenv from "dotenv";
 import express from "express";
 
-import { getUser, registerUser } from "../controllers/userController";
+import {
+  getAllUser,
+  getUser,
+  registerUser,
+} from "../controllers/userController";
 
 dotenv.config();
 
-const router = express.Router();
+const userRouter = express.Router();
 
-router.post("/register", registerUser);
-router.get("/:address", getUser);
+userRouter.post("/register", registerUser);
+userRouter.get("/:address", getUser);
+userRouter.get("/all", getAllUser);
+
+export default userRouter;
