@@ -165,20 +165,20 @@ export const refundContributions = async (req: Request, res: Response) => {
 };
 
 export const getCampaignStats = async (req: Request, res: Response) => {
-	try {
-			const { campaignId } = req.params;
+  try {
+    const { campaignId } = req.params;
 
-			const campaign = await contract.getCampaignDetails(campaignId);
-			const contributions = await contract.getCampaignContributions(campaignId);
+    const campaign = await contract.getCampaignDetails(campaignId);
+    const contributions = await contract.getCampaignContributions(campaignId);
 
-			const stats = {
-					totalRaised: campaign.amountRaised.toString(),
-					goal: campaign.goal.toString(),
-					contributorCount: contributions.length,
-			};
+    const stats = {
+      totalRaised: campaign.amountRaised.toString(),
+      goal: campaign.goal.toString(),
+      contributorCount: contributions.length,
+    };
 
-			return res.json(stats);
-	} catch (error: any) {
-			return res.status(500).json({ error: error.message });
-	}
-}
+    res.json(stats);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+};
