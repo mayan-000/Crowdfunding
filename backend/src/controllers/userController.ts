@@ -62,3 +62,28 @@ export const getAllUser = async (req: Request, res: Response) => {
     res.status(500).json({ error: error.message });
   }
 };
+
+export const getUserContributions = async (req: Request, res: Response) => {
+  try {
+    const { address } = req.params;
+
+    const filter = contract.filters.Funder(null, address);
+    const events = await contract.queryFilter(filter, 0, "latest");
+
+    const contributions = events.map((event) => {
+      const _event = event as EventLog;
+
+      return {
+        campaignId: _event.args.campaignId,
+        funder: _event.args.funder,
+        amount: _event.args.amount,
+      };
+    });
+
+    res.json({
+      contributions,
+    });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+};
