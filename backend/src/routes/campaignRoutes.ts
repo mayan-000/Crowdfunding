@@ -6,6 +6,8 @@ import {
   getAllCampaign,
   getCamapignContributions,
   getCampaign,
+  refundContributions,
+  withdrawContributions,
 } from "../controllers/campaignController";
 
 dotenv.config();
@@ -17,5 +19,8 @@ campaignRouter.get("/all", getAllCampaign);
 campaignRouter.get("/:campaignId", getCampaign);
 campaignRouter.post("/contribute", contributeToCampaign);
 campaignRouter.get("/:campaignId/contributions", getCamapignContributions);
+campaignRouter.post("/withdraw", withdrawContributions);
+campaignRouter.post("/refund", refundContributions);
+campaignRouter.get('/stats')
 
 export default campaignRouter;

@@ -115,3 +115,70 @@ export const getCamapignContributions = async (req: Request, res: Response) => {
     });
   }
 };
+
+export const withdrawContributions = async (req: Request, res: Response) => {
+  try {
+    const { signedTx } = req.body;
+
+    if (!signedTx) {
+      res.status(400).json({
+        message: "Missing signed transaction!",
+      });
+      return;
+    }
+
+    const txRes = await provider.broadcastTransaction(signedTx);
+
+    res.json({
+      message: "Campaign money withdrawn!",
+      hash: txRes.hash,
+    });
+  } catch (error: any) {
+    res.status(500).json({
+      error: error.message,
+    });
+  }
+};
+
+export const refundContributions = async (req: Request, res: Response) => {
+  try {
+    const { signedTx } = req.body;
+
+    if (!signedTx) {
+      res.status(400).json({
+        message: "Missing signed transaction!",
+      });
+      return;
+    }
+
+    const txRes = await provider.broadcastTransaction(signedTx);
+
+    res.json({
+      message: "Campaign money refunded!",
+      hash: txRes.hash,
+    });
+  } catch (error: any) {
+    res.status(500).json({
+      error: error.message,
+    });
+  }
+};
+
+export const getCampaignStats = async (req: Request, res: Response) => {
+	try {
+			const { campaignId } = req.params;
+
+			const campaign = await contract.getCampaignDetails(campaignId);
+			const contributions = await contract.getCampaignContributions(campaignId);
+
+			const stats = {
+					totalRaised: campaign.amountRaised.toString(),
+					goal: campaign.goal.toString(),
+					contributorCount: contributions.length,
+			};
+
+			return res.json(stats);
+	} catch (error: any) {
+			return res.status(500).json({ error: error.message });
+	}
+}
