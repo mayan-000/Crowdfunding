@@ -11,9 +11,10 @@ dotenv.config();
 
 const userRouter = express.Router();
 
-userRouter.post("/register", registerUser);
 userRouter.get("/:address", getUser);
 userRouter.get("/all", getAllUser);
-userRouter.get('/:address/contributions')
+userRouter.get("/:address/contributions");
+
+userRouter.post("/register", registerUser);
 
 export default userRouter;
