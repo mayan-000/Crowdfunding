@@ -4,7 +4,7 @@ import {
   contributeToCampaign,
   createCampaign,
   getAllCampaign,
-  getCamapignContributions,
+  getCampignContributions,
   getCampaign,
   getCampaignStats,
   refundContributions,
@@ -18,7 +18,7 @@ const campaignRouter = express.Router();
 campaignRouter.get("/all", getAllCampaign);
 campaignRouter.get("/:campaignId", getCampaign);
 campaignRouter.get("/stats", getCampaignStats);
-campaignRouter.get("/:campaignId/contributions", getCamapignContributions);
+campaignRouter.get("/:campaignId/contributions", getCampignContributions);
 
 campaignRouter.post("/contribute", contributeToCampaign);
 campaignRouter.post("/withdraw", withdrawContributions);

@@ -89,7 +89,7 @@ export const contributeToCampaign = async (req: Request, res: Response) => {
   }
 };
 
-export const getCamapignContributions = async (req: Request, res: Response) => {
+export const getCampignContributions = async (req: Request, res: Response) => {
   try {
     const { campaignId } = req.params;
 
@@ -168,11 +168,22 @@ export const getCampaignStats = async (req: Request, res: Response) => {
   try {
     const { campaignId } = req.params;
 
-    const campaign = await contract.getCampaignDetails(campaignId);
-    const contributions = await contract.getCampaignContributions(campaignId);
+    const campaign = await contract.getCampaign(campaignId);
+
+    const filter = contract.filters.Funded(campaignId);
+    const events = await contract.queryFilter(filter, 0, "latest");
+    const contributions = events.map((event) => {
+      const _event = event as EventLog;
+
+      return {
+        campaignId: _event.args.campaignId,
+        funder: _event.args.funder,
+        amount: _event.args.amount,
+      };
+    });
 
     const stats = {
-      totalRaised: campaign.amountRaised.toString(),
+      totalRaised: campaign.fundsRaised.toString(),
       goal: campaign.goal.toString(),
       contributorCount: contributions.length,
     };

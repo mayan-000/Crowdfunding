@@ -23,7 +23,9 @@ contract Crowdfunding is Initializable, UUPSUpgradeable, OwnableUpgradeable {
 	uint256 public campaignCount;
 
 	event CampaignCreated(uint256 campaignId, address creator, string title, uint256 goal);
+
 	event Funded(uint256 campaignId, address funder, uint256 amount);
+
 	event Withdrawn(uint256 campaignId, address creator, uint256 amount);
 
 	function initialize() public initializer {
@@ -64,6 +66,18 @@ contract Crowdfunding is Initializable, UUPSUpgradeable, OwnableUpgradeable {
 		payable(campaign.creator).transfer(amount);
 
 		emit Withdrawn(_campaignId, campaign.creator, amount);
+	}
+
+	function getCampaign(uint256 campaignId) public view returns (Campaign memory) {
+		return campaigns[campaignId];
+	}
+
+	function getUserData(address _address) public view returns (User memory) {
+		return users.getUser(_address);
+	}
+
+	function getAllUser() public view returns (User [] memory) {
+		return users.getAllUser();
 	}
 
 	function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}

@@ -4,6 +4,7 @@ import express from "express";
 import {
   getAllUser,
   getUser,
+  getUserContributions,
   registerUser,
 } from "../controllers/userController";
 
@@ -13,7 +14,7 @@ const userRouter = express.Router();
 
 userRouter.get("/:address", getUser);
 userRouter.get("/all", getAllUser);
-userRouter.get("/:address/contributions");
+userRouter.get("/:address/contributions", getUserContributions);
 
 userRouter.post("/register", registerUser);
 
