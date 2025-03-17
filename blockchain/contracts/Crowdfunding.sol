@@ -9,6 +9,11 @@ import "./Users.sol";
 
 contract Crowdfunding is Initializable, UUPSUpgradeable, OwnableUpgradeable {
 	Users private users;
+	
+	struct Contribution {
+		address contributor;
+		uint256 amount;
+	}
 
 	struct Campaign {
 		address creator;
@@ -17,6 +22,7 @@ contract Crowdfunding is Initializable, UUPSUpgradeable, OwnableUpgradeable {
 		uint256 goal;
 		uint256 fundsRaised;
 		bool isActive;
+		Contribution[] contributions;
 	}
 
 	mapping (uint256 => Campaign) public campaigns;
@@ -42,7 +48,7 @@ contract Crowdfunding is Initializable, UUPSUpgradeable, OwnableUpgradeable {
 	function createCampaign(string memory _title, string memory _description, uint256 _goal) public {
 		require(users.isRegistered(msg.sender), "User must be registered");
 
-		campaigns[campaignCount] = Campaign(msg.sender, _title, _description, _goal, 0, true);
+		campaigns[campaignCount] = Campaign(msg.sender, _title, _description, _goal, 0, true, new Contribution[](0));
 		emit CampaignCreated(campaignCount, msg.sender, _title, _goal);
 		campaignCount++;
 	}
@@ -53,6 +59,7 @@ contract Crowdfunding is Initializable, UUPSUpgradeable, OwnableUpgradeable {
 		require(campaign.isActive, "Campaign is not active");
 
 		campaign.fundsRaised += msg.value;
+		campaign.contributions.push(Contribution(msg.sender, msg.value));
 		emit Funded(_campaignId, msg.sender, msg.value);
 	}
 
@@ -66,6 +73,17 @@ contract Crowdfunding is Initializable, UUPSUpgradeable, OwnableUpgradeable {
 		payable(campaign.creator).transfer(amount);
 
 		emit Withdrawn(_campaignId, campaign.creator, amount);
+	}
+	
+	function refundContributions(uint256 _campaignId) public {
+		Campaign storage campaign = campaigns[_campaignId];
+		require(!campaign.isActive, "Campaign must be inactive");
+
+		campaign.fundsRaised = 0;
+
+		for (uint256 i = 0; i < campaign.contributions.length; i++) {
+			payable(campaign.contributions[i].contributor).transfer(campaign.contributions[i].amount);
+		}
 	}
 
 	function getCampaign(uint256 campaignId) public view returns (Campaign memory) {
