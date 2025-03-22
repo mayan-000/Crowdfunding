@@ -5,23 +5,27 @@ import { fetcher } from "../utils";
 export const registerUser = async (name: string) => {
   const _registerUser = async (
     _: ethers.Provider,
-    signer: ethers.Signer,
+    __: ethers.Signer,
     contract: ethers.Contract
   ) => {
-    const data = contract.interface.encodeFunctionData("registerUser", [name]);
-    const contractAddress = await contract.getAddress();
+    try {
+      await contract.registerUser.staticCall(name);
+    } catch (error: unknown) {
+      console.error(error);
 
-    const tx = new ethers.Transaction();
-    tx.to = contractAddress;
-    tx.data = data;
-    tx.value = ethers.parseEther("0");
+      return {
+        error: {
+          // @ts-expect-error - error is unknown
+          message: error?.reason ?? "Something went wrong",
+        },
+      };
+    }
 
-    const populatedTx = await signer.populateTransaction(tx);
-    const txRes = await signer.sendTransaction(populatedTx);
+    const ctxRes = await contract.registerUser.send(name);
+    const ctxReceipt = await ctxRes.wait();
 
-    const receipt = await txRes.wait();
-
-    return receipt;
+    console.log(ctxReceipt);
+    return ctxReceipt;
   };
 
   const response = await fetcher(_registerUser);
@@ -35,7 +39,7 @@ export const getUser = async (address: string) => {
     contract: ethers.Contract
   ) => {
     const user = await contract.getUserData(address);
-    const filter = contract.filters.Funded(null, address);
+    const filter = contract.filters.Funded(null, address, null);
     const events = await contract.queryFilter(filter, 0, "latest");
 
     const contributions = events.map((event) => {
@@ -81,7 +85,7 @@ export const getUserContributions = async (address: string) => {
     __: ethers.Signer,
     contract: ethers.Contract
   ) => {
-    const filter = contract.filters.Funder(null, address);
+    const filter = contract.filters.Funded(null, address);
     const events = await contract.queryFilter(filter, 0, "latest");
 
     const contributions = events.map((event) => {

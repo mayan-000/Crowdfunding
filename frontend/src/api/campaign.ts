@@ -9,28 +9,35 @@ export const createCampaign = async (
 ) => {
   const _createCampaign = async (
     _: ethers.Provider,
-    signer: ethers.Signer,
+    __: ethers.Signer,
     contract: ethers.Contract
   ) => {
-    const contractAddress = await contract.getAddress();
+    try {
+      await contract.createCampaign.staticCall(
+        title,
+        description,
+        ethers.parseEther(String(goal))
+      );
+    } catch (error) {
+      console.error(error);
 
-    const data = contract.interface.encodeFunctionData("createCampaign", [
+      return {
+        error: {
+          // @ts-expect-error - error is unknown
+          message: error?.reason ?? "Something went wrong",
+        },
+      };
+    }
+
+    const ctxRes = await contract.createCampaign.send(
       title,
       description,
-      goal,
-    ]);
+      ethers.parseEther(String(goal))
+    );
+    const ctxReceipt = await ctxRes.wait();
 
-    const tx = new ethers.Transaction();
-    tx.to = contractAddress;
-    tx.data = data;
-    tx.value = ethers.parseEther("0");
-
-    const populatedTx = await signer.populateTransaction(tx);
-    const txRes = await signer.sendTransaction(populatedTx);
-
-    const receipt = txRes.wait();
-
-    return receipt;
+    console.log(ctxReceipt);
+    return ctxReceipt;
   };
 
   const response = await fetcher(_createCampaign);
@@ -50,10 +57,10 @@ export const getAllCampaign = async () => {
       const _event = event as ethers.EventLog;
 
       return {
-        campaignId: _event.args.campaignId,
-        creator: _event.args.creator,
-        title: _event.args.title,
-        goal: _event.args.goal,
+        campaignId: _event.args.getValue("campaignId"),
+        creator: _event.args.getValue("creator"),
+        title: _event.args.getValue("refTitle"),
+        goal: _event.args.getValue("goal"),
       };
     });
 
@@ -66,7 +73,7 @@ export const getAllCampaign = async () => {
   return response;
 };
 
-export const getCampaign = async (campaignId: string) => {
+export const getCampaign = async (campaignId: bigint) => {
   const _getCampaign = async (
     _: ethers.Provider,
     __: ethers.Signer,
@@ -84,38 +91,44 @@ export const getCampaign = async (campaignId: string) => {
 };
 
 export const contributeToCampaign = async (
-  campaignId: string,
+  campaignId: bigint,
   ether: string
 ) => {
   const _contributeToCampaign = async (
     _: ethers.Provider,
-    signer: ethers.Signer,
+    __: ethers.Signer,
     contract: ethers.Contract
   ) => {
-    const contractAddress = await contract.getAddress();
+    try {
+      await contract.fundCampaign.staticCall(campaignId, {
+        value: ethers.parseEther(ether),
+      });
+    } catch (error) {
+      console.error(error);
 
-    const data = contract.interface.encodeFunctionData("fundCampaign", [
-      campaignId,
-    ]);
+      return {
+        error: {
+          // @ts-expect-error - error is unknown
+          message: error?.reason ?? "Something went wrong",
+        },
+      };
+    }
 
-    const tx = new ethers.Transaction();
-    tx.to = contractAddress;
-    tx.data = data;
-    tx.value = ethers.parseEther(ether);
+    const ctxRes = await contract.fundCampaign.send(campaignId, {
+      value: ethers.parseEther(ether),
+    });
 
-    const populatedTx = await signer.populateTransaction(tx);
+    const ctxReceipt = await ctxRes.wait();
 
-    const txRes = await signer.sendTransaction(populatedTx);
-
-    const receipt = await txRes.wait();
-    return receipt;
+    console.log(ctxReceipt);
+    return ctxReceipt;
   };
 
   const response = await fetcher(_contributeToCampaign);
   return response;
 };
 
-export const getCampaignContributions = async (campaignId: string) => {
+export const getCampaignContributions = async (campaignId: bigint) => {
   const _getCampaignContributions = async (
     _: ethers.Provider,
     __: ethers.Signer,
@@ -143,91 +156,92 @@ export const getCampaignContributions = async (campaignId: string) => {
   return response;
 };
 
-export const withdrawContributions = async (campaignId: string) => {
+export const withdrawContributions = async (campaignId: bigint) => {
   const _withdrawContributions = async (
     _: ethers.Provider,
-    signer: ethers.Signer,
+    __: ethers.Signer,
     contract: ethers.Contract
   ) => {
-    const contractAddress = await contract.getAddress();
+    try {
+      await contract.withdrawFunds.staticCall(campaignId);
+    } catch (error) {
+      console.error(error);
 
-    const data = contract.interface.encodeFunctionData("withdrawFunds", [
-      campaignId,
-    ]);
+      return {
+        error: {
+          // @ts-expect-error - error is unknown
+          message: error?.reason ?? "Something went wrong",
+        },
+      };
+    }
 
-    const tx = new ethers.Transaction();
-    tx.to = contractAddress;
-    tx.data = data;
-    tx.value = ethers.parseEther("0");
+    const ctxRes = await contract.withdrawFunds.send(campaignId);
+    const ctxReceipt = await ctxRes.wait();
 
-    const populatedTx = await signer.populateTransaction(tx);
-
-    const txRes = await signer.sendTransaction(populatedTx);
-
-    const receipt = await txRes.wait();
-    return receipt;
+    console.log(ctxReceipt);
+    return ctxReceipt;
   };
 
   const response = await fetcher(_withdrawContributions);
   return response;
 };
 
-export const refundContribution = async (campaignId: string) => {
-  const _refundContribution = async (
-    _: ethers.Provider,
-    signer: ethers.Signer,
-    contract: ethers.Contract
-  ) => {
-    const contractAddress = await contract.getAddress();
-
-    const data = contract.interface.encodeFunctionData("refundContributions", [
-      campaignId,
-    ]);
-
-    const tx = new ethers.Transaction();
-    tx.to = contractAddress;
-    tx.data = data;
-    tx.value = ethers.parseEther("0");
-
-    const populatedTx = await signer.populateTransaction(tx);
-
-    const txRes = await signer.sendTransaction(populatedTx);
-
-    const receipt = await txRes.wait();
-    return receipt;
-  };
-
-  const response = await fetcher(_refundContribution);
-  return response;
-};
-
-export const getCampaignStats = async (campaignId: string) => {
-  const _getCampaignStats = async (
+export const inActivateCampaign = async (campaignId: bigint) => {
+  const _inActivateCampaign = async (
     _: ethers.Provider,
     __: ethers.Signer,
     contract: ethers.Contract
   ) => {
-    const campaign = await contract.getCampaign(campaignId);
-
-    const filter = contract.filters.Funded(campaignId);
-    const events = await contract.queryFilter(filter, 0, "latest");
-
-    const contributions = events.map((event) => {
-      const _event = event as ethers.EventLog;
+    try {
+      await contract.inActivateCampaign.staticCall(campaignId);
+    } catch (error) {
+      console.error(error);
 
       return {
-        campaignId: _event.args.campaignId,
-        funder: _event.args.funder,
-        amount: _event.args.amount,
+        error: {
+          // @ts-expect-error - error is unknown
+          message: error?.reason ?? "Something went wrong",
+        },
       };
-    });
+    }
 
-    return {
-      campaign,
-      contributions,
-    };
+    const ctxRes = await contract.inActivateCampaign.send(campaignId);
+    const ctxReceipt = await ctxRes.wait();
+
+    console.log(ctxReceipt);
+    return ctxReceipt;
   };
 
-  const response = await fetcher(_getCampaignStats);
+  const response = await fetcher(_inActivateCampaign);
+  return response;
+};
+
+export const refundContributions = async (campaignId: bigint) => {
+  const _refundContributions = async (
+    _: ethers.Provider,
+    __: ethers.Signer,
+    contract: ethers.Contract
+  ) => {
+    try {
+      await contract.refundContributions.staticCall(campaignId);
+    } catch (error) {
+      console.error(error);
+
+      return {
+        error: {
+          // @ts-expect-error - error is unknown
+          message: error?.reason ?? "Something went wrong",
+        },
+      };
+    }
+
+    const ctxRes = await contract.refundContributions.send(campaignId);
+    const ctxReceipt = await ctxRes.wait();
+
+    console.log(ctxReceipt);
+    return ctxReceipt;
+  };
+
+  const response = await fetcher(_refundContributions);
   return response;
 };

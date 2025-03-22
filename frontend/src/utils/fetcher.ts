@@ -24,6 +24,6 @@ export const fetcher = async (
     const response = await callback(provider, signer, contract);
 		return response;
   } catch (error) {
-    console.log(error);
+    console.error(error);
   }
 };
