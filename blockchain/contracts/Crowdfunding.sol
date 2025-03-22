@@ -50,6 +50,7 @@ contract Crowdfunding is Initializable, UUPSUpgradeable, OwnableUpgradeable {
 		string memory name
 	) public {
 		require(!users[msg.sender].isRegistered, 'User already exists!');
+		require(bytes(name).length > 0, 'Name cannot be empty!');
 
 		users[msg.sender] = User(name, msg.sender, true);
 		userAddresses.push(msg.sender);

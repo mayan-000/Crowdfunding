@@ -22,10 +22,8 @@ export const registerUser = async (name: string) => {
     }
 
     const ctxRes = await contract.registerUser.send(name);
-    const ctxReceipt = await ctxRes.wait();
 
-    console.log(ctxReceipt);
-    return ctxReceipt;
+    return ctxRes;
   };
 
   const response = await fetcher(_registerUser);
@@ -39,22 +37,9 @@ export const getUser = async (address: string) => {
     contract: ethers.Contract
   ) => {
     const user = await contract.getUserData(address);
-    const filter = contract.filters.Funded(null, address, null);
-    const events = await contract.queryFilter(filter, 0, "latest");
-
-    const contributions = events.map((event) => {
-      const _event = event as ethers.EventLog;
-
-      return {
-        campaignId: _event.args.campaignId,
-        funder: _event.args.funder,
-        amount: _event.args.amount,
-      };
-    });
 
     return {
       user,
-      contributions,
     };
   };
 
