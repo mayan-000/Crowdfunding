@@ -5,7 +5,7 @@ import { fetcher } from "../utils";
 export const createCampaign = async (
   title: string,
   description: string,
-  goal: number
+  goal: bigint
 ) => {
   const _createCampaign = async (
     _: ethers.Provider,
@@ -34,10 +34,8 @@ export const createCampaign = async (
       description,
       ethers.parseEther(String(goal))
     );
-    const ctxReceipt = await ctxRes.wait();
 
-    console.log(ctxReceipt);
-    return ctxReceipt;
+    return ctxRes;
   };
 
   const response = await fetcher(_createCampaign);
