@@ -1,59 +1,13 @@
-import { useCallback, useEffect, useState } from "react";
-import { getAllCampaign } from "../../api/campaign";
-import CampaignComponent, {
-  Campaign,
-} from "../../components/CampaignComponent";
 import { Link, Outlet, useLocation } from "react-router-dom";
-import Listener from "../../components/Listener";
-import { DeferredTopicFilter } from "ethers";
+
+import CampaignComponent from "../../components/CampaignComponent";
+import { useDataStore } from "../../store/useDataStore";
+import { ToastContainer } from "react-toastify";
 
 const CampaignPage = () => {
-  const [campaigns, setCampaigns] = useState<Campaign[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const campaigns = useDataStore((state) => state.campaigns);
+  const latestTransaction = useDataStore((state) => state.latestTransaction);
   const location = useLocation();
-  const [campaignCreateReponseHash, setCampaignCreateReponseHash] = useState<
-    string | null
-  >(null);
-  const [deferredTopicFilter, setDeferredTopicFilter] =
-    useState<DeferredTopicFilter | null>(null);
-
-  useEffect(() => {
-    (async () => {
-      const res = await getAllCampaign();
-
-      setLoading(false);
-
-      if (res.error) {
-        setError(res.error.message);
-        return;
-      }
-
-      setCampaigns(res.campaigns);
-    })();
-  }, []);
-
-  const eventListener = useCallback(async (...args: unknown[]) => {
-    const res = await getAllCampaign();
-
-    setLoading(false);
-
-    if (res.error) {
-      setError(res.error.message);
-      return;
-    }
-
-    setCampaigns(res.campaigns);
-		console.log('felo')
-  }, []);
-
-  if (loading) {
-    return <div className="text-center text-xl">Loading campaigns...</div>;
-  }
-
-  if (error) {
-    return <div className="text-center text-red-500">{error}</div>;
-  }
 
   return (
     <div className="p-4">
@@ -69,21 +23,13 @@ const CampaignPage = () => {
         )}
       </div>
 
-      <Outlet
-        context={{ setCampaignCreateReponseHash, setDeferredTopicFilter }}
-      />
+      <Outlet />
 
-      {campaignCreateReponseHash && (
-        <div>
-          <p className="text-green-500 text-center">
-            Campaign created successfully with hash: {campaignCreateReponseHash}
-          </p>
-          <Listener
-            eventName={deferredTopicFilter}
-            callback={eventListener}
-            toastMessage="Campaign created successfully!"
-            once={true}
-          />
+      <ToastContainer />
+
+      {latestTransaction && latestTransaction.type === "campaign" && (
+        <div className="mb-4 p-4 border rounded bg-green-100">
+          Latest Campaign Creation Transaction: {latestTransaction.key}
         </div>
       )}
 

@@ -1,17 +1,20 @@
-import { useCallback } from "react";
-import { useNavigate, useOutletContext } from "react-router-dom";
+import { useCallback, useState } from "react";
+import { useNavigate } from "react-router-dom";
+
 import { createCampaign } from "../../api/campaign";
-import { getContract, getProvider } from "../../utils";
-import { Transaction } from "ethers";
+import { useDataStore } from "../../store/useDataStore";
 
 const CreateCampaign = () => {
   const navigate = useNavigate();
-  const { setCampaignCreateReponseHash, setDeferredTopicFilter } =
-    useOutletContext();
+  const setLatestTransaction = useDataStore(
+    (state) => state.setLatestTransaction
+  );
+  const [loading, setLoading] = useState(false);
 
   const handleSubmit = useCallback(
     async (e: React.FormEvent<HTMLFormElement>) => {
       e.preventDefault();
+      setLoading(true);
 
       const formData = new FormData(e.target as HTMLFormElement);
       const data = Object.fromEntries(formData.entries());
@@ -27,23 +30,14 @@ const CreateCampaign = () => {
         return;
       }
 
-      setCampaignCreateReponseHash(res.hash);
+      setLatestTransaction({
+        type: "campaign",
+        key: res.hash,
+      });
 
-      const signer = await (await getProvider())?.getSigner();
-
-      if (!signer) {
-        return;
-      }
-
-      const contract = getContract(signer);
-      const filter = contract.filters.CampaignCreated(
-        null,
-        await signer.getAddress()
-      );
-
-      setDeferredTopicFilter(filter);
+      navigate("/campaign");
     },
-    [setCampaignCreateReponseHash, setDeferredTopicFilter]
+    [navigate, setLatestTransaction]
   );
 
   const handleClose = () => {
@@ -110,9 +104,10 @@ const CreateCampaign = () => {
       </div>
       <button
         type="submit"
+        disabled={loading}
         className="w-full bg-blue-500 text-white p-2 rounded hover:bg-blue-600"
       >
-        Create Campaign
+        {loading ? "Creating..." : "Create Campaign"}
       </button>
     </form>
   );
