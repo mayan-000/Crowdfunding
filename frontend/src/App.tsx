@@ -8,29 +8,33 @@ import CreateCampaign from "./pages/CampaignPage/CreateCampaign";
 import { useDataStore } from "./store/useDataStore";
 
 const App = () => {
-	const initialize = useDataStore((state) => state.initialize)
-	const [initialized, setInitialized] = useState(false);
+  const initialize = useDataStore((state) => state.initialize);
+  const [initialized, setInitialized] = useState(false);
 
   useEffect(() => {
-		let isMounted = true;
+    let isMounted = true;
 
     initialize().then((cleanup) => {
       if (isMounted && cleanup) {
-				setInitialized(true);
+        setInitialized(true);
         return cleanup;
       }
     });
 
     return () => {
       isMounted = false;
-			setInitialized(false);
+      setInitialized(false);
     };
-  }, [initialize])
+  }, [initialize]);
 
-	if (!initialized) {
-		return <div>Loading...</div>
-	}
-	
+  if (!initialized) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-gray-100">
+        <div className="w-16 h-16 border-4 border-blue-500 border-dashed rounded-full animate-spin"></div>
+      </div>
+    );
+  }
+
   return (
     <Routes>
       <Route path="/" element={<HomePage />} />

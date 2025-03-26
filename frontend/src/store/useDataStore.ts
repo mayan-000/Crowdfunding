@@ -1,4 +1,4 @@
-import { ethers, formatEther } from "ethers";
+import { ethers } from "ethers";
 import { create } from "zustand";
 import { toast } from "react-toastify";
 
