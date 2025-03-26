@@ -3,34 +3,57 @@ import { create } from "zustand";
 import { toast } from "react-toastify";
 
 import { getProvider, getContract } from "../utils";
-import { Campaign } from "../components/CampaignComponent";
 import { getAllCampaign } from "../api/campaign";
+import { User } from "../pages/UserPage";
+import { getUser } from "../api";
 
 interface Transaction {
   type: "campaign" | "user";
   key: string;
 }
 
+export type Campaign = {
+  campaignId: string;
+  creator: string;
+  title: string;
+  goal: string;
+};
+
+export type User = {
+  name: string;
+  address: string;
+  isRegistered: boolean;
+};
+
 interface DataStore {
-  provider: ethers.Provider | null;
-  signer: ethers.Signer | null;
+  provider: ethers.BrowserProvider | null;
+  signer: ethers.JsonRpcSigner | null;
   contract: ethers.Contract | null;
   campaigns: Campaign[];
+  user: User | null;
   latestTransaction: Transaction | null;
-  setProvider: (provider: ethers.Provider) => void;
-  setSigner: (signer: ethers.Signer) => void;
+  isLoggedIn: boolean;
+  setProvider: (provider: ethers.BrowserProvider) => void;
+  setSigner: (signer: ethers.JsonRpcSigner) => void;
   setContract: (contract: ethers.Contract) => void;
   setCampaigns: (campaigns: Campaign[]) => void;
   setLatestTransaction: (transaction: Transaction) => void;
   initialize: () => Promise<(() => void) | void>;
+  setLoggedIn: (isLoggedIn: boolean) => void;
+  login: () => Promise<void>;
+  logout: () => void;
+  attachListeners: () => (() => void) | void;
+  getCampaigns: () => Promise<void>;
 }
 
-export const useDataStore = create<DataStore>((set) => ({
+export const useDataStore = create<DataStore>((set, get) => ({
   provider: null,
   signer: null,
   contract: null,
+  user: null,
   campaigns: [],
   latestTransaction: null,
+  isLoggedIn: false,
   setProvider: (provider) => set({ provider }),
   setSigner: (signer) => set({ signer }),
   setContract: (contract) => set({ contract }),
@@ -38,6 +61,28 @@ export const useDataStore = create<DataStore>((set) => ({
   setLatestTransaction: (transaction) =>
     set({ latestTransaction: transaction }),
   initialize: async () => {
+    await get().login();
+
+    const signer = get().signer;
+    if (!signer) {
+      return;
+    }
+
+    const contract = getContract(signer);
+    if (!contract) {
+      alert("Contract not found");
+      return;
+    }
+
+    set({ contract });
+
+    const cleanup = get().attachListeners();
+    get().getCampaigns();
+
+    return cleanup;
+  },
+  setLoggedIn: (isLoggedIn: boolean) => set({ isLoggedIn }),
+  login: async () => {
     const provider = await getProvider();
     const signer = await provider?.getSigner();
 
@@ -46,16 +91,29 @@ export const useDataStore = create<DataStore>((set) => ({
       return;
     }
 
-    const contract = getContract(signer);
+    set({ provider, signer });
+
+    const address = await signer.getAddress();
+
+    const userData = await getUser(address);
+    const [name, , isRegistered] = userData?.user ?? [];
+
+    if (isRegistered) {
+      set({ user: { name, address, isRegistered }, isLoggedIn: true });
+    }
+  },
+  logout: () => {
+    set({ user: null, isLoggedIn: false });
+  },
+  attachListeners: () => {
+    const contract = get().contract;
 
     if (!contract) {
-      alert("Contract not found");
       return;
     }
 
-    set({ provider, signer, contract });
-
     const filter = contract.filters.CampaignCreated();
+
     const listener = (...args: any) => {
       const [campaignId, creator, , title, goal] = args[0].args;
 
@@ -72,7 +130,6 @@ export const useDataStore = create<DataStore>((set) => ({
           return state;
         }
 
-
         toast("Campaign created successfully");
 
         return { campaigns: [...state.campaigns, campaign] };
@@ -81,16 +138,16 @@ export const useDataStore = create<DataStore>((set) => ({
 
     contract.on(filter, listener);
 
+    return () => {
+      contract.off(filter, listener);
+    };
+  },
+  getCampaigns: async () => {
     const res = await getAllCampaign();
     if (res.error) {
       toast(res.error.message);
       return;
     }
-
     set({ campaigns: res.campaigns });
-
-    return () => {
-      contract.off(filter, listener);
-    };
   },
 }));

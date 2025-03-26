@@ -2,52 +2,8 @@ import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 
 const HomePage = () => {
-  const isLoggedIn = false;
-
   return (
     <div className="p-4">
-      <header className="bg-white shadow-md py-4 px-8 flex justify-between items-center mb-8">
-        <Link to="/" className="text-2xl font-bold text-blue-600">
-          Crowdfunding
-        </Link>
-        <nav className="flex items-center space-x-6">
-          <Link
-            to="/"
-            className="text-gray-700 hover:text-blue-600 font-medium"
-          >
-            Home
-          </Link>
-          {isLoggedIn ? (
-            <div className="relative group">
-              <button className="text-gray-700 hover:text-blue-600 font-medium">
-                Profile
-              </button>
-              <div className="absolute right-0 mt-2 w-48 bg-white border rounded-lg shadow-lg hidden group-hover:block">
-                <Link
-                  to="/profile"
-                  className="block px-4 py-2 text-gray-700 hover:bg-gray-100"
-                >
-                  My Profile
-                </Link>
-                <Link
-                  to="/logout"
-                  className="block px-4 py-2 text-gray-700 hover:bg-gray-100"
-                >
-                  Logout
-                </Link>
-              </div>
-            </div>
-          ) : (
-            <Link
-              to="/register"
-              className="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700"
-            >
-              Register / Login
-            </Link>
-          )}
-        </nav>
-      </header>
-
       <div className="bg-blue-50 text-gray-800 py-32 px-8 rounded-lg text-center mb-12 shadow-lg">
         <h1 className="text-6xl font-extrabold mb-6 text-blue-600">
           Empower Ideas, Fund Dreams

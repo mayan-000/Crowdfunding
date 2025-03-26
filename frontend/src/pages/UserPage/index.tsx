@@ -4,12 +4,7 @@ import { getUser, registerUser } from "../../api";
 import UserComponent from "../../components/UserComponent";
 import { DeferredTopicFilter } from "ethers";
 import Listener from "../../components/Listener";
-
-export type User = {
-  name: string;
-  address: string;
-  isRegistered: boolean;
-};
+import { User } from "../../store/useDataStore";
 
 const UserPage = () => {
   const [userData, setUserData] = useState<User | null>(null);

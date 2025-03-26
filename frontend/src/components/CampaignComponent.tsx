@@ -1,11 +1,5 @@
 import { formatEther } from "ethers";
-
-export type Campaign = {
-  campaignId: string;
-  creator: string;
-  title: string;
-  goal: string;
-};
+import { Campaign } from "../store/useDataStore";
 
 interface CampaignComponentProps {
   campaign: Campaign;
@@ -19,7 +13,8 @@ const CampaignComponent = ({ campaign }: CampaignComponentProps) => {
         <span className="font-semibold">Creator:</span> {campaign.creator}
       </p>
       <p className="text-gray-700">
-        <span className="font-semibold">Goal:</span> {formatEther(campaign.goal)} ETH
+        <span className="font-semibold">Goal:</span>{" "}
+        {formatEther(campaign.goal)} ETH
       </p>
     </div>
   );
