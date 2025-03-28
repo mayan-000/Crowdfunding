@@ -1,17 +1,19 @@
-import { useEffect, useState } from "react";
-import { Link, Outlet, Route, Routes } from "react-router-dom";
+import { useCallback, useEffect, useState } from "react";
+import { Link, Outlet, Route, Routes, useNavigate } from "react-router-dom";
 
 import HomePage from "./pages/HomePage";
 import UserPage from "./pages/UserPage";
 import CampaignPage from "./pages/CampaignPage";
 import CreateCampaign from "./pages/CampaignPage/CreateCampaign";
 import { useDataStore } from "./store/useDataStore";
+import { ToastContainer } from "react-toastify";
 
 const App = () => {
   const initialize = useDataStore((state) => state.initialize);
   const isLoggedIn = useDataStore((state) => state.isLoggedIn);
   const login = useDataStore((state) => state.login);
   const [initialized, setInitialized] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     let isMounted = true;
@@ -29,6 +31,14 @@ const App = () => {
     };
   }, [initialize]);
 
+  const handleLogin = useCallback(async () => {
+    const userFound = await login();
+
+    if (!userFound) {
+      navigate("/user");
+    }
+  }, [login, navigate]);
+
   if (!initialized) {
     return (
       <div className="flex items-center justify-center h-screen bg-gray-100">
@@ -39,7 +49,7 @@ const App = () => {
 
   return (
     <>
-      <header className="bg-white shadow-md py-4 px-8 flex justify-between items-center mb-8">
+      <header className="bg-white shadow-md py-4 px-8 flex justify-between items-center">
         <Link to="/" className="text-2xl font-bold text-blue-600">
           Crowdfunding
         </Link>
@@ -59,8 +69,8 @@ const App = () => {
             </Link>
           ) : (
             <button
-              className="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700"
-              onClick={login}
+              className="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 cursor-pointer hover:opacity-90"
+              onClick={handleLogin}
             >
               Register / Login
             </button>
@@ -78,7 +88,9 @@ const App = () => {
 
       <Outlet />
 
-      <footer className="bg-gray-100 py-8 mt-12">
+      <ToastContainer />
+
+      <footer className="bg-gray-100 py-8">
         <div className="container mx-auto px-4">
           <div className="flex flex-col md:flex-row justify-between items-center">
             {/* Logo and Description */}

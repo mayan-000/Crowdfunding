@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 
 const HomePage = () => {
   return (
-    <div className="px-8">
+    <div className="px-8 py-12">
       <div className="bg-blue-50 text-gray-800 py-32 px-8 rounded-lg text-center mb-12 shadow-lg">
         <h1 className="text-6xl font-extrabold mb-6 text-blue-600">
           Empower Ideas, Fund Dreams

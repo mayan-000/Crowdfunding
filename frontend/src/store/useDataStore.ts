@@ -4,7 +4,6 @@ import { toast } from "react-toastify";
 
 import { getProvider, getContract } from "../utils";
 import { getAllCampaign } from "../api/campaign";
-import { User } from "../pages/UserPage";
 import { getUser } from "../api";
 
 interface Transaction {
@@ -40,7 +39,8 @@ interface DataStore {
   setLatestTransaction: (transaction: Transaction) => void;
   initialize: () => Promise<(() => void) | void>;
   setLoggedIn: (isLoggedIn: boolean) => void;
-  login: () => Promise<void>;
+  login: () => Promise<boolean>;
+  register: (name: string) => Promise<void>;
   logout: () => void;
   attachListeners: () => (() => void) | void;
   getCampaigns: () => Promise<void>;
@@ -88,7 +88,8 @@ export const useDataStore = create<DataStore>((set, get) => ({
 
     if (!signer) {
       alert("Please connect your wallet");
-      return;
+
+      return false;
     }
 
     set({ provider, signer });
@@ -100,7 +101,41 @@ export const useDataStore = create<DataStore>((set, get) => ({
 
     if (isRegistered) {
       set({ user: { name, address, isRegistered }, isLoggedIn: true });
+
+      return true;
     }
+
+    return false;
+  },
+  register: async (name: string) => {
+    const contract = get().contract;
+    const address = await get().signer?.getAddress();
+
+    if (!contract || !address) {
+      return;
+    }
+
+    const res = await contract.registerUser(name);
+
+    if (res.error) {
+      toast(res.error.message);
+      return;
+    }
+
+    set({ latestTransaction: { type: "user", key: res.hash } });
+
+    const filter = contract.filters.UserRegistered(address);
+
+    const listener = (...args: any) => {
+      const name = args[0].args[0];
+      const address = args[0].args[1];
+
+      set({ user: { name, address, isRegistered: true }, isLoggedIn: true });
+
+      toast("User registered successfully!");
+    };
+
+    contract.once(filter, listener);
   },
   logout: () => {
     set({ user: null, isLoggedIn: false });

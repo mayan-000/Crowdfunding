@@ -2,7 +2,6 @@ import { Link, Outlet, useLocation } from "react-router-dom";
 
 import CampaignComponent from "../../components/CampaignComponent";
 import { useDataStore } from "../../store/useDataStore";
-import { ToastContainer } from "react-toastify";
 
 const CampaignPage = () => {
   const campaigns = useDataStore((state) => state.campaigns);
@@ -24,8 +23,6 @@ const CampaignPage = () => {
       </div>
 
       <Outlet />
-
-      <ToastContainer />
 
       {latestTransaction && latestTransaction.type === "campaign" && (
         <div className="mb-4 p-4 border rounded bg-green-100">
