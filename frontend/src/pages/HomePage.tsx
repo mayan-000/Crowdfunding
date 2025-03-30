@@ -14,7 +14,7 @@ const HomePage = () => {
           make a difference.
         </p>
         <Link
-          to="/campaigns"
+          to="/campaign"
           className="bg-blue-600 text-white px-12 py-4 rounded-lg font-semibold shadow-md hover:bg-blue-700"
         >
           Explore Campaigns

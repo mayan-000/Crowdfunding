@@ -1,42 +1,112 @@
-import { Link, Outlet, useLocation } from "react-router-dom";
-
+import { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Outlet } from "react-router-dom";
 import CampaignComponent from "../../components/CampaignComponent";
 import { useDataStore } from "../../store/useDataStore";
+import NoCampaignsImage from "../../assets/showing-love.svg";
+import CreateCampaign from "./CreateCampaign";
 
 const CampaignPage = () => {
   const campaigns = useDataStore((state) => state.campaigns);
   const latestTransaction = useDataStore((state) => state.latestTransaction);
-  const location = useLocation();
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setIsModalOpen(false);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, []);
 
   return (
-    <div className="p-4">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">Campaigns</h1>
-        {location.pathname !== "/campaign/create" && (
-          <Link
-            to="/campaign/create"
-            className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-          >
-            Create Campaign
-          </Link>
-        )}
+    <div className="px-8 py-12 bg-gray-50 min-h-screen relative">
+      <div className="mb-8 flex justify-between items-center">
+        <h1 className="text-4xl font-bold text-blue-600">Campaigns</h1>
+        <button
+          onClick={() => setIsModalOpen(true)}
+          className="bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 transition-all shadow-md"
+        >
+          Create Campaign
+        </button>
       </div>
 
-      <Outlet />
-
       {latestTransaction && latestTransaction.type === "campaign" && (
-        <div className="mb-4 p-4 border rounded bg-green-100">
-          Latest Campaign Creation Transaction: {latestTransaction.key}
+        <div className="mb-6 p-4 border-l-4 border-green-500 bg-green-100 rounded-lg shadow-sm">
+          <p className="text-green-800 font-medium">
+            Latest Campaign Creation Transaction:{" "}
+            <span className="font-bold">{latestTransaction.key}</span>
+          </p>
         </div>
       )}
 
-      {campaigns.length === 0 ? (
-        <p className="text-center text-gray-500">No campaigns available</p>
-      ) : (
-        campaigns.map((campaign) => (
-          <CampaignComponent key={campaign.campaignId} campaign={campaign} />
-        ))
-      )}
+      <div>
+        {campaigns.length === 0 ? (
+          <div className="flex flex-col items-center text-center text-gray-500 text-lg">
+            <img
+              src={NoCampaignsImage}
+              alt="No Campaigns"
+              className="w-64 h-64 mb-6"
+            />
+            <p className="mb-4 font-medium text-gray-700 text-xl">
+              No campaigns available at the moment.
+            </p>
+            <p className="mb-4 text-gray-600">
+              Start by creating a new campaign to bring your ideas to life and
+              inspire others to contribute to your cause.
+            </p>
+            <button
+              onClick={() => setIsModalOpen(true)}
+              className="bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 transition-all shadow-md"
+            >
+              Create Your First Campaign
+            </button>
+          </div>
+        ) : (
+          <>
+            {campaigns.map((campaign) => (
+              <CampaignComponent
+                key={campaign.campaignId}
+                campaign={campaign}
+              />
+            ))}
+          </>
+        )}
+      </div>
+
+      <AnimatePresence>
+        {isModalOpen && (
+          <motion.div
+            className="fixed inset-0 backdrop-blur-xs flex items-center justify-center z-50"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setIsModalOpen(false)}
+          >
+            <motion.div
+              className="bg-white p-6 rounded-lg shadow-lg w-full max-w-lg border border-gray-300"
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              transition={{ duration: 0.3 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <CreateCampaign
+                onClose={() => {
+                  setIsModalOpen(false);
+                }}
+              />
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <Outlet />
     </div>
   );
 };

@@ -16,6 +16,7 @@ export type Campaign = {
   creator: string;
   title: string;
   goal: string;
+  raised?: string;
 };
 
 export type User = {

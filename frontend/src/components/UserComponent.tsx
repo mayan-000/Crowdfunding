@@ -123,7 +123,7 @@ const UserComponent = ({ user }: UserComponentProps) => {
             </p>
             <button
               className="mt-6 bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 transition-all"
-              onClick={() => navigate("/campaigns")}
+              onClick={() => navigate("/campaign")}
             >
               Explore Campaigns
             </button>
