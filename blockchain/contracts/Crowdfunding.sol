@@ -10,6 +10,8 @@ contract Crowdfunding is Initializable, UUPSUpgradeable, OwnableUpgradeable {
 	struct Contribution {
 		address contributor;
 		uint256 amount;
+		uint256 campaignId;
+		uint256 timestamp;
 	}
 
 	struct Campaign {
@@ -99,7 +101,12 @@ contract Crowdfunding is Initializable, UUPSUpgradeable, OwnableUpgradeable {
 		require(isUserRegistered(msg.sender), "User must be registered");
 
 		campaign.fundsRaised += msg.value;
-		campaign.contributions.push(Contribution(msg.sender, msg.value));
+		campaign.contributions.push(Contribution(
+			msg.sender,
+			msg.value,
+			_campaignId,
+			block.timestamp
+		));
 		emit Funded(_campaignId, msg.sender, msg.value);
 
 		if(campaign.fundsRaised == campaign.goal) {

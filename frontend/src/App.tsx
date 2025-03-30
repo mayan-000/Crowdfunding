@@ -8,6 +8,7 @@ import CreateCampaign from "./pages/CampaignPage/CreateCampaign";
 import { useDataStore } from "./store/useDataStore";
 import { ToastContainer } from "react-toastify";
 import CampaignDetailsPage from "./pages/CampaignDetailsPage";
+import UserDetailsPage from "./pages/UserPage/UserDetailsPage";
 
 const App = () => {
   const initialize = useDataStore((state) => state.initialize);
@@ -82,6 +83,7 @@ const App = () => {
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/user" element={<UserPage />} />
+        <Route path="/user/:userId" element={<UserDetailsPage />} />
         <Route path="/campaign" element={<CampaignPage />} />
         <Route path="/campaign/:campaignId" element={<CampaignDetailsPage />} />
       </Routes>
