@@ -15,6 +15,7 @@ contract Crowdfunding is Initializable, UUPSUpgradeable, OwnableUpgradeable {
 	}
 
 	struct Campaign {
+		uint256 id;
 		address creator;
 		string title;
 		string description;
@@ -22,6 +23,8 @@ contract Crowdfunding is Initializable, UUPSUpgradeable, OwnableUpgradeable {
 		uint256 fundsRaised;
 		bool isActive;
 		Contribution[] contributions;
+		uint256 createdAt;
+		uint256 deadline;
 	}
 
 	struct User {
@@ -35,7 +38,7 @@ contract Crowdfunding is Initializable, UUPSUpgradeable, OwnableUpgradeable {
 	address [] public userAddresses;
 	mapping (address => User) public users;
 
-	event CampaignCreated(uint256 indexed campaignId, address indexed creator, string indexed title, string refTitle, uint256 goal);
+	event CampaignCreated(uint256 indexed campaignId, address indexed creator, string indexed title);
 
 	event Funded(uint256 indexed campaignId, address indexed funder, uint256 amount);
 
@@ -84,9 +87,9 @@ contract Crowdfunding is Initializable, UUPSUpgradeable, OwnableUpgradeable {
 		require(bytes(_description).length > 0, "Description cannot be empty");
 		require(_goal > 0, "Goal must be greater than 0");
 
-		campaigns[campaignCount] = Campaign(msg.sender, _title, _description, _goal, 0, true, new Contribution[](0));
+		campaigns[campaignCount] = Campaign(campaignCount, msg.sender, _title, _description, _goal, 0, true, new Contribution[](0), block.timestamp, block.timestamp + 30 days);
 
-		emit CampaignCreated(campaignCount, msg.sender, _title, _title, _goal);
+		emit CampaignCreated(campaignCount, msg.sender, _title);
 
 		campaignCount++;
 
@@ -153,6 +156,16 @@ contract Crowdfunding is Initializable, UUPSUpgradeable, OwnableUpgradeable {
 		require(campaignId < campaignCount, "Invalid campaign ID");
 
 		return campaigns[campaignId];
+	}
+
+	function getAllCampaigns() public view returns (Campaign[] memory) {
+		Campaign[] memory allCampaigns = new Campaign[](campaignCount);
+
+		for (uint256 i = 0; i < campaignCount; i++) {
+			allCampaigns[i] = campaigns[i];
+		}
+
+		return allCampaigns;
 	}
 
 	function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}

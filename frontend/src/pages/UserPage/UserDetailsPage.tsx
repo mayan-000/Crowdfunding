@@ -83,7 +83,6 @@ const UserDetailsPage = () => {
         </p>
       </div>
 
-      {/* Contributions Section */}
       <h2 className="text-2xl font-bold mb-4 text-blue-600">Contributions</h2>
       {user.contributions.length > 0 ? (
         <div className="space-y-3">

@@ -1,18 +1,17 @@
 import { useCallback, useState } from "react";
-import { useNavigate } from "react-router-dom";
 
 import { createCampaign } from "../../api/campaign";
 import { useDataStore } from "../../store/useDataStore";
+import { toast } from "react-toastify";
+import { ContractTransactionResponse } from "ethers";
 
 interface CreateCampaignProps {
   onClose: () => void;
 }
 
 const CreateCampaign = ({ onClose }: CreateCampaignProps) => {
-  const setLatestTransaction = useDataStore(
-    (state) => state.setLatestTransaction
-  );
   const [loading, setLoading] = useState(false);
+  const addTransaction = useDataStore((state) => state.addTransaction);
 
   const handleSubmit = useCallback(
     async (e: React.FormEvent<HTMLFormElement>) => {
@@ -25,22 +24,21 @@ const CreateCampaign = ({ onClose }: CreateCampaignProps) => {
       const res = await createCampaign(
         String(data.title),
         String(data.description),
-        BigInt(String(data.goal))
+        String(data.goal)
       );
 
-      if (res.error) {
+      if ((res as ResponseError)?.error) {
         setLoading(false);
+        toast((res as ResponseError).error?.message);
         return;
       }
 
-      setLatestTransaction({
-        type: "campaign",
-        key: res.hash,
-      });
+      const { hash } = res as ContractTransactionResponse;
+      addTransaction(hash);
 
       onClose();
     },
-    [setLatestTransaction, onClose]
+    [onClose]
   );
 
   return (

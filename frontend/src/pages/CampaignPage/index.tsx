@@ -8,7 +8,6 @@ import CreateCampaign from "./CreateCampaign";
 
 const CampaignPage = () => {
   const campaigns = useDataStore((state) => state.campaigns);
-  const latestTransaction = useDataStore((state) => state.latestTransaction);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
@@ -36,17 +35,8 @@ const CampaignPage = () => {
         </button>
       </div>
 
-      {latestTransaction && latestTransaction.type === "campaign" && (
-        <div className="mb-6 p-4 border-l-4 border-green-500 bg-green-100 rounded-lg shadow-sm">
-          <p className="text-green-800 font-medium">
-            Latest Campaign Creation Transaction:{" "}
-            <span className="font-bold">{latestTransaction.key}</span>
-          </p>
-        </div>
-      )}
-
       <div>
-        {campaigns.length === 0 ? (
+        {campaigns?.length === 0 ? (
           <div className="flex flex-col items-center text-center text-gray-500 text-lg">
             <img
               src={NoCampaignsImage}
@@ -69,9 +59,9 @@ const CampaignPage = () => {
           </div>
         ) : (
           <>
-            {campaigns.map((campaign) => (
+            {campaigns?.map((campaign) => (
               <CampaignComponent
-                key={campaign.campaignId}
+                key={campaign.id}
                 campaign={campaign}
               />
             ))}

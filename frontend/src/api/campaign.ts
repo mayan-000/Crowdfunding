@@ -5,8 +5,8 @@ import { fetcher } from "../utils";
 export const createCampaign = async (
   title: string,
   description: string,
-  goal: bigint
-) => {
+  goal: string
+): Promise<ethers.ContractTransactionResponse | ResponseError> => {
   const _createCampaign = async (
     _: ethers.Provider,
     __: ethers.Signer,
@@ -38,60 +38,110 @@ export const createCampaign = async (
     return ctxRes;
   };
 
-  const response = await fetcher(_createCampaign);
+  const response = <ethers.ContractTransactionResponse | ResponseError>(
+    await fetcher(_createCampaign)
+  );
   return response;
 };
 
-export const getAllCampaign = async () => {
+export const getAllCampaign = async (): Promise<Campaign[]> => {
   const _getAllCampaign = async (
     _: ethers.Provider,
     __: ethers.Signer,
     contract: ethers.Contract
   ) => {
-    const filter = contract.filters.CampaignCreated();
-    const events = await contract.queryFilter(filter, 0, "latest");
+    const res = await contract.getAllCampaigns();
 
-    const campaigns = events.map((event) => {
-      const _event = event as ethers.EventLog;
+    const campaigns: Campaign[] = res.map((campaign: any) => {
+      const [
+        id,
+        creator,
+        title,
+        description,
+        goal,
+        raised,
+        isActive,
+        contributions,
+        createdAt,
+        deadline,
+      ] = campaign;
 
       return {
-        campaignId: _event.args.getValue("campaignId"),
-        creator: _event.args.getValue("creator"),
-        title: _event.args.getValue("refTitle"),
-        goal: _event.args.getValue("goal"),
+        id,
+        creator,
+        title,
+        description,
+        goal,
+        raised,
+        isActive,
+        contributions: contributions.map((contribution: any) => ({
+          amount: contribution.amount,
+          contributor: contribution.contributor,
+          campaignId: contribution.campaignId,
+          timestamp: contribution.timestamp.toString(),
+        })),
+        createdAt: createdAt.toString(),
+        deadline: deadline.toString(),
       };
     });
 
-    return {
-      campaigns,
-    };
+    return campaigns;
   };
 
-  const response = await fetcher(_getAllCampaign);
+  const response = <Campaign[]>await fetcher(_getAllCampaign);
   return response;
 };
 
-export const getCampaign = async (campaignId: bigint) => {
+export const getCampaign = async (campaignId: bigint): Promise<Campaign> => {
   const _getCampaign = async (
     _: ethers.Provider,
     __: ethers.Signer,
     contract: ethers.Contract
   ) => {
-    const campaign = await contract.getCampaign(campaignId);
+    const res = await contract.getCampaign(campaignId);
 
-    return {
-      campaign,
+    const [
+      id,
+      creator,
+      title,
+      description,
+      goal,
+      raised,
+      isActive,
+      contributions,
+      createdAt,
+      deadline,
+    ] = res;
+
+    const campaign: Campaign = {
+      id,
+      creator,
+      title,
+      description,
+      goal,
+      raised,
+      isActive,
+      contributions: contributions.map((contribution: any) => ({
+        amount: contribution.amount,
+        contributor: contribution.contributor,
+        campaignId: contribution.campaignId,
+        timestamp: contribution.timestamp.toString(),
+      })),
+      createdAt: createdAt.toString(),
+      deadline: deadline.toString(),
     };
+
+    return campaign;
   };
 
-  const response = await fetcher(_getCampaign);
+  const response = <Campaign>await fetcher(_getCampaign);
   return response;
 };
 
 export const contributeToCampaign = async (
   campaignId: bigint,
   ether: string
-) => {
+): Promise<ethers.ContractTransactionResponse | ResponseError> => {
   const _contributeToCampaign = async (
     _: ethers.Provider,
     __: ethers.Signer,
@@ -122,7 +172,9 @@ export const contributeToCampaign = async (
     return ctxReceipt;
   };
 
-  const response = await fetcher(_contributeToCampaign);
+  const response = <ethers.ContractTransactionResponse | ResponseError>(
+    await fetcher(_contributeToCampaign)
+  );
   return response;
 };
 
@@ -154,7 +206,9 @@ export const getCampaignContributions = async (campaignId: bigint) => {
   return response;
 };
 
-export const withdrawContributions = async (campaignId: bigint) => {
+export const withdrawContributions = async (
+  campaignId: bigint
+): Promise<ethers.ContractTransactionResponse | ResponseError> => {
   const _withdrawContributions = async (
     _: ethers.Provider,
     __: ethers.Signer,
@@ -180,11 +234,15 @@ export const withdrawContributions = async (campaignId: bigint) => {
     return ctxReceipt;
   };
 
-  const response = await fetcher(_withdrawContributions);
+  const response = <ethers.ContractTransactionResponse | ResponseError>(
+    await fetcher(_withdrawContributions)
+  );
   return response;
 };
 
-export const inActivateCampaign = async (campaignId: bigint) => {
+export const inActivateCampaign = async (
+  campaignId: bigint
+): Promise<ethers.ContractTransactionResponse | ResponseError> => {
   const _inActivateCampaign = async (
     _: ethers.Provider,
     __: ethers.Signer,
@@ -210,11 +268,15 @@ export const inActivateCampaign = async (campaignId: bigint) => {
     return ctxReceipt;
   };
 
-  const response = await fetcher(_inActivateCampaign);
+  const response = <ethers.ContractTransactionResponse | ResponseError>(
+    await fetcher(_inActivateCampaign)
+  );
   return response;
 };
 
-export const refundContributions = async (campaignId: bigint) => {
+export const refundContributions = async (
+  campaignId: bigint
+): Promise<ethers.ContractTransactionResponse | ResponseError> => {
   const _refundContributions = async (
     _: ethers.Provider,
     __: ethers.Signer,
@@ -234,12 +296,12 @@ export const refundContributions = async (campaignId: bigint) => {
     }
 
     const ctxRes = await contract.refundContributions.send(campaignId);
-    const ctxReceipt = await ctxRes.wait();
 
-    console.log(ctxReceipt);
-    return ctxReceipt;
+    return ctxRes;
   };
 
-  const response = await fetcher(_refundContributions);
+  const response = <ethers.ContractTransactionResponse | ResponseError>(
+    await fetcher(_refundContributions)
+  );
   return response;
 };

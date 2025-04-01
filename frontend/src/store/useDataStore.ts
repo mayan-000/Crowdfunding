@@ -1,23 +1,10 @@
-import { ethers } from "ethers";
+import { ethers, formatEther } from "ethers";
 import { create } from "zustand";
 import { toast } from "react-toastify";
 
 import { getProvider, getContract } from "../utils";
-import { getAllCampaign } from "../api/campaign";
+import { getAllCampaign, getCampaign } from "../api/campaign";
 import { getUser } from "../api";
-
-interface Transaction {
-  type: "campaign" | "user";
-  key: string;
-}
-
-export type Campaign = {
-  campaignId: string;
-  creator: string;
-  title: string;
-  goal: string;
-  raised?: string;
-};
 
 export type User = {
   name: string;
@@ -31,13 +18,11 @@ interface DataStore {
   contract: ethers.Contract | null;
   campaigns: Campaign[];
   user: User | null;
-  latestTransaction: Transaction | null;
   isLoggedIn: boolean;
   setProvider: (provider: ethers.BrowserProvider) => void;
   setSigner: (signer: ethers.JsonRpcSigner) => void;
   setContract: (contract: ethers.Contract) => void;
   setCampaigns: (campaigns: Campaign[]) => void;
-  setLatestTransaction: (transaction: Transaction) => void;
   initialize: () => Promise<(() => void) | void>;
   setLoggedIn: (isLoggedIn: boolean) => void;
   login: () => Promise<boolean>;
@@ -45,6 +30,9 @@ interface DataStore {
   logout: () => void;
   attachListeners: () => (() => void) | void;
   getCampaigns: () => Promise<void>;
+  pendingTransactions: { hash: string; confirmed: boolean }[];
+  addTransaction: (hash: string) => void;
+  updateTransactionStatus: (hash: string, confirmed: boolean) => void;
 }
 
 export const useDataStore = create<DataStore>((set, get) => ({
@@ -53,14 +41,11 @@ export const useDataStore = create<DataStore>((set, get) => ({
   contract: null,
   user: null,
   campaigns: [],
-  latestTransaction: null,
   isLoggedIn: false,
   setProvider: (provider) => set({ provider }),
   setSigner: (signer) => set({ signer }),
   setContract: (contract) => set({ contract }),
   setCampaigns: (campaigns) => set({ campaigns }),
-  setLatestTransaction: (transaction) =>
-    set({ latestTransaction: transaction }),
   initialize: async () => {
     await get().login();
 
@@ -150,26 +135,22 @@ export const useDataStore = create<DataStore>((set, get) => ({
 
     const filter = contract.filters.CampaignCreated();
 
-    const listener = (...args: any) => {
-      const [campaignId, creator, , title, goal] = args[0].args;
+    const listener = async (...args: any) => {
+      const [campaignId] = args[0].args;
 
-      set((state) => {
-        const campaign = {
-          campaignId,
-          creator,
-          title,
-          goal: goal,
-        };
+      const campaignData = await getCampaign(BigInt(campaignId!));
 
-        const lastCampaign = state.campaigns[state.campaigns.length - 1];
-        if (lastCampaign && lastCampaign.campaignId === campaign.campaignId) {
-          return state;
-        }
+      const camapaign: Campaign = {
+        ...campaignData,
+        raised: campaignData.raised,
+        goal: campaignData.goal,
+        contributions: campaignData.contributions.map((contribution: any) => ({
+          ...contribution,
+          amount: formatEther(contribution.amount),
+        })),
+      };
 
-        toast("Campaign created successfully");
-
-        return { campaigns: [...state.campaigns, campaign] };
-      });
+      set((state) => ({ campaigns: [...state.campaigns, camapaign] }));
     };
 
     contract.on(filter, listener);
@@ -179,11 +160,55 @@ export const useDataStore = create<DataStore>((set, get) => ({
     };
   },
   getCampaigns: async () => {
-    const res = await getAllCampaign();
-    if (res.error) {
-      toast(res.error.message);
+    const campaigns = await getAllCampaign();
+
+    set({ campaigns });
+  },
+  pendingTransactions: [],
+  addTransaction: (hash) => {
+    const provider = get().provider;
+
+    if (!provider) {
       return;
     }
-    set({ campaigns: res.campaigns });
+
+    set((state) => ({
+      pendingTransactions: [
+        ...state.pendingTransactions,
+        { hash, confirmed: false },
+      ],
+    }));
+
+    provider
+      .waitForTransaction(hash)
+      .then((receipt) => {
+        if (receipt?.status === 1) {
+          set((state) => ({
+            pendingTransactions: state.pendingTransactions.map((tx) =>
+              tx.hash === hash ? { ...tx, confirmed: true } : tx
+            ),
+          }));
+
+          toast("Transaction confirmed");
+        } else {
+          toast("Transaction failed");
+        }
+      })
+      .catch((error) => {
+        console.error("Error waiting for transaction:", error);
+        set((state) => ({
+          pendingTransactions: state.pendingTransactions.filter(
+            (tx) => tx.hash !== hash
+          ),
+        }));
+
+        toast("Transaction failed");
+      });
   },
+  updateTransactionStatus: (hash, confirmed) =>
+    set((state) => ({
+      pendingTransactions: state.pendingTransactions.map((tx) =>
+        tx.hash === hash ? { ...tx, confirmed } : tx
+      ),
+    })),
 }));
