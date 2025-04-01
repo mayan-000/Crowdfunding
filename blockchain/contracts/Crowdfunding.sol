@@ -42,7 +42,11 @@ contract Crowdfunding is Initializable, UUPSUpgradeable, OwnableUpgradeable {
 
 	event Funded(uint256 indexed campaignId, address indexed funder, uint256 amount);
 
-	event Withdrawn(uint256 campaignId, address creator, uint256 amount);
+	event Withdrawn(uint256 indexed campaignId, address creator, uint256 amount);
+
+	event Refunded(uint256 indexed campaignId);
+
+	event Deactivated(uint256 indexed campaignId);
 
 	event UserRegistered(address indexed user, string name);
 
@@ -138,6 +142,8 @@ contract Crowdfunding is Initializable, UUPSUpgradeable, OwnableUpgradeable {
 		require(campaign.isActive, "Campaign is already inactive");
 
 		campaign.isActive = false;
+
+		emit Deactivated(_campaignId);
 	}
 	
 	function refundContributions(uint256 _campaignId) public {
@@ -150,6 +156,8 @@ contract Crowdfunding is Initializable, UUPSUpgradeable, OwnableUpgradeable {
 		for (uint256 i = 0; i < campaign.contributions.length; i++) {
 			payable(campaign.contributions[i].contributor).transfer(campaign.contributions[i].amount);
 		}
+
+		emit Refunded(_campaignId);
 	}
 
 	function getCampaign(uint256 campaignId) public view returns (Campaign memory) {

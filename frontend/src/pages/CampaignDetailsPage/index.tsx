@@ -109,6 +109,26 @@ const CampaignDetailsPage = () => {
     setContributionAmount("");
   }, [campaignId, contributionAmount]);
 
+  // check this later
+  useEffect(() => {
+    const filter = contract?.filters.Deactivated(BigInt(campaignId!));
+
+    const listener = (...args: any) => {
+      toast("Campaign deactivated by creator!");
+
+      setCampaign((prevCampaign: any) => ({
+        ...prevCampaign,
+        isActive: false,
+      }));
+    };
+
+    if (filter) contract?.on(filter, listener);
+
+    return () => {
+      if (filter) contract?.off(filter, listener);
+    };
+  }, [campaignId]);
+
   const handleInactiveCampaign = useCallback(async () => {
     if (!campaign.isActive || campaign?.creator !== userAddress) {
       return;
@@ -123,9 +143,20 @@ const CampaignDetailsPage = () => {
 
     const { hash } = res as ContractTransactionResponse;
     addTransaction(hash);
-
-    toast("Campaign deactivated successfully!");
   }, [campaign?.creator, campaign?.isActive, campaignId, userAddress]);
+
+  useEffect(() => {
+    const filter = contract?.filters.Withdrawn(BigInt(campaignId!));
+    const listener = (...args: any) => {
+      toast("Funds withdrawn by creator!");
+    };
+
+    if (filter) contract?.on(filter, listener);
+
+    return () => {
+      if (filter) contract?.off(filter, listener);
+    };
+  }, [campaignId]);
 
   const handleWithdraw = useCallback(async () => {
     if (campaign.isActive || campaign.creator !== userAddress) {
@@ -147,6 +178,19 @@ const CampaignDetailsPage = () => {
     addTransaction(hash);
 
     toast("Funds withdrawn successfully!");
+  }, [campaignId]);
+
+  useEffect(() => {
+    const filter = contract?.filters.Refunded(BigInt(campaignId!));
+    const listener = (...args: any) => {
+      toast("Contributors refunded!");
+    };
+
+    if (filter) contract?.on(filter, listener);
+
+    return () => {
+      if (filter) contract?.off(filter, listener);
+    };
   }, [campaignId]);
 
   const handleRefund = useCallback(async () => {
