@@ -16,7 +16,7 @@ import {
   inActivateCampaign,
   withdrawContributions,
   refundContributions,
-} from "../../api/campaign";
+} from "../../api";
 import { useDataStore } from "../../store/useDataStore";
 
 const CampaignDetailsPage = () => {

@@ -1,6 +1,6 @@
 import { useCallback, useState } from "react";
 
-import { createCampaign } from "../../api/campaign";
+import { createCampaign } from "../../api";
 import { useDataStore } from "../../store/useDataStore";
 import { toast } from "react-toastify";
 import { ContractTransactionResponse } from "ethers";
