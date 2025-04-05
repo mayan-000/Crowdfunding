@@ -21,3 +21,9 @@ type Campaign = {
   createdAt: string;
   deadline: string;
 };
+
+type User = {
+  name: string;
+  address: string;
+  isRegistered: boolean;
+};

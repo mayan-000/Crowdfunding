@@ -40,7 +40,7 @@ contract Crowdfunding is Initializable, UUPSUpgradeable, OwnableUpgradeable {
 
 	event CampaignCreated(uint256 indexed campaignId, address indexed creator, string indexed title);
 
-	event Funded(uint256 indexed campaignId, address indexed funder, uint256 amount);
+	event Funded(uint256 indexed campaignId, address indexed funder, uint256 amount, uint256 timestamp);
 
 	event Withdrawn(uint256 indexed campaignId, address creator, uint256 amount);
 
@@ -114,7 +114,7 @@ contract Crowdfunding is Initializable, UUPSUpgradeable, OwnableUpgradeable {
 			_campaignId,
 			block.timestamp
 		));
-		emit Funded(_campaignId, msg.sender, msg.value);
+		emit Funded(_campaignId, msg.sender, msg.value, block.timestamp);
 
 		if(campaign.fundsRaised == campaign.goal) {
 			campaign.isActive = false;

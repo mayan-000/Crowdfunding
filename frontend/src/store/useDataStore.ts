@@ -1,16 +1,10 @@
-import { ethers, formatEther } from "ethers";
+import { ContractTransactionResponse, ethers, formatEther } from "ethers";
 import { create } from "zustand";
 import { toast } from "react-toastify";
 
 import { getProvider, getContract } from "../utils";
 import { getAllCampaign, getCampaign } from "../api/campaign";
-import { getUser } from "../api";
-
-export type User = {
-  name: string;
-  address: string;
-  isRegistered: boolean;
-};
+import { getUser, registerUser } from "../api";
 
 interface DataStore {
   provider: ethers.BrowserProvider | null;
@@ -82,11 +76,13 @@ export const useDataStore = create<DataStore>((set, get) => ({
 
     const address = await signer.getAddress();
 
-    const userData = await getUser(address);
-    const [name, , isRegistered] = userData?.user ?? [];
+    const user = await getUser(address);
 
-    if (isRegistered) {
-      set({ user: { name, address, isRegistered }, isLoggedIn: true });
+    if (user.isRegistered) {
+      set({
+        user: { name: user.name, address, isRegistered: true },
+        isLoggedIn: true,
+      });
 
       return true;
     }
@@ -101,14 +97,15 @@ export const useDataStore = create<DataStore>((set, get) => ({
       return;
     }
 
-    const res = await contract.registerUser(name);
+    const res = await registerUser(name);
 
-    if (res.error) {
-      toast(res.error.message);
-      return;
+    if ((res as ResponseError).error) {
+      toast((res as ResponseError).error.message);
+      throw new Error((res as ResponseError).error.message);
     }
 
-    set({ latestTransaction: { type: "user", key: res.hash } });
+    const { hash } = res as ContractTransactionResponse;
+    get().addTransaction(hash);
 
     const filter = contract.filters.UserRegistered(address);
 
